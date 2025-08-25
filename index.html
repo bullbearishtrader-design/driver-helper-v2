@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Driver Helper - Passenger</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#28a745">
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -14,43 +16,18 @@
       border-radius: 10px;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
-    h1, h2 {
-      text-align: center;
-    }
-    label {
-      display: block;
-      margin: 10px 0 5px;
-    }
-    input, select {
-      width: 100%;
-      padding: 8px;
-      box-sizing: border-box;
-      margin-bottom: 10px;
-    }
+    h1, h2 { text-align: center; }
+    label { display: block; margin: 10px 0 5px; }
+    input, select { width: 100%; padding: 8px; box-sizing: border-box; margin-bottom: 10px; }
     button {
-      padding: 10px 15px;
-      width: 100%;
-      background-color: #007bff;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 16px;
+      padding: 12px 15px; width: 100%; font-weight: bold; font-size: 18px;
+      background-color: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer;
     }
-    button:hover {
-      background-color: #0056b3;
-    }
-    p, .alert {
-      margin: 10px 0;
-      font-weight: bold;
-      text-align: center;
-    }
+    button:hover { background-color: #218838; }
+    p, .alert { margin: 10px 0; font-weight: bold; text-align: center; }
     .alert {
-      background-color: #fffae6;
-      border: 1px solid #ffd633;
-      padding: 10px;
-      border-radius: 5px;
-      display: none;
+      background-color: #fffae6; border: 1px solid #ffd633; padding: 10px; border-radius: 5px;
+      display: none; white-space: pre-line;
     }
   </style>
 </head>
@@ -58,8 +35,24 @@
 
   <h1>Driver Helper - Passenger</h1>
 
-  <!-- Service Type -->
-  <h2>Service Type</h2>
+  <h2>Book KLIA Job</h2>
+  
+  <label for="pickup">Pick-up Location:</label>
+  <input type="text" id="pickup" placeholder="Enter pick-up location">
+
+  <label for="terminal">Select Terminal:</label>
+  <select id="terminal">
+    <option value="KLIA-T1">KLIA Terminal 1</option>
+    <option value="KLIA-T2">KLIA Terminal 2</option>
+  </select>
+
+  <label for="payment">Payment Method:</label>
+  <select id="payment">
+    <option value="Cash">Cash</option>
+    <option value="Online">Online</option>
+    <option value="eWallet">eWallet</option>
+  </select>
+
   <label for="service">Choose Service:</label>
   <select id="service">
     <option value="60">Ekonomi - RM60</option>
@@ -68,72 +61,49 @@
     <option value="185">Exec - RM185</option>
   </select>
 
-  <!-- Pick-up Location -->
-  <label for="pickup">Pick-up Location:</label>
-  <input type="text" id="pickup" placeholder="Enter pick-up location">
+  <label for="jobDate">Date & Time:</label>
+  <input type="datetime-local" id="jobDate">
 
-  <!-- Payment Method -->
-  <label for="payment">Payment Method:</label>
-  <select id="payment">
-    <option value="Cash">Cash</option>
-    <option value="Online">Online</option>
-    <option value="eWallet">eWallet</option>
-  </select>
-
-  <button onclick="calculateFare()">Calculate Fare</button>
+  <button onclick="bookJob()">BOOKING NOW</button>
 
   <p id="fare">Estimated Fare: RM0.00</p>
   <p id="net">Net Profit (15% deduction): RM0.00</p>
 
-  <!-- KLIA Reminder -->
-  <h2>KLIA Reminder</h2>
-  <label for="reminderDate">Date & Time:</label>
-  <input type="datetime-local" id="reminderDate">
-  <button onclick="setReminder()">Set Reminder</button>
-  <div class="alert" id="reminderAlert">⏰ KLIA Reminder!</div>
-
-  <!-- Job Alert -->
-  <h2>Job Alert</h2>
-  <button onclick="simulateJob()">Check KLIA Jobs</button>
-  <div class="alert" id="jobAlert">🚨 New KLIA Job Available! <button onclick="acceptJob()">Accept Job</button></div>
+  <div class="alert" id="jobAlert"></div>
 
 <script>
-function calculateFare() {
-  let base = parseFloat(document.getElementById('service').value);
-  
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').then(() => console.log('Service Worker Registered'));
+}
+
+function bookJob() {
+  let pickup = document.getElementById('pickup').value;
+  let terminal = document.getElementById('terminal').value;
+  let payment = document.getElementById('payment').value;
+  let servicePrice = parseFloat(document.getElementById('service').value);
+  let date = document.getElementById('jobDate').value;
+
+  if(!pickup || !payment || !date) { alert('Please fill all fields!'); return; }
+
   // Auto detect HF
-  let now = new Date();
+  let now = new Date(date);
   let hour = now.getHours();
   let isHF = (hour >= 5 && hour < 10) || (hour >= 17 && hour < 21);
-  
-  if(isHF) base *= 1.25; // +25% HF
-  let net = base * 0.85; // 15% deduction
+  let fare = servicePrice;
+  if(isHF) fare *= 1.25;
 
-  document.getElementById('fare').innerText = 'Estimated Fare: RM' + base.toFixed(2);
+  let net = fare * 0.85; // 15% deduction
+
+  document.getElementById('fare').innerText = 'Estimated Fare: RM' + fare.toFixed(2);
   document.getElementById('net').innerText = 'Net Profit (15% deduction): RM' + net.toFixed(2);
-}
 
-function setReminder() {
-  let date = document.getElementById('reminderDate').value;
-  if(date) {
-    let alertBox = document.getElementById('reminderAlert');
-    alertBox.style.display = 'block';
-    alertBox.innerText = '⏰ KLIA Reminder set for ' + new Date(date).toLocaleString();
-    setTimeout(()=>{ alertBox.style.display='none'; }, 5000);
-  }
-}
-
-function simulateJob() {
   let alertBox = document.getElementById('jobAlert');
   alertBox.style.display = 'block';
-  setTimeout(()=>{ alertBox.style.display='none'; }, 5000);
-}
-
-function acceptJob() {
-  alert('Job Accepted! Good luck 🚗');
+  alertBox.innerText = `🚨 Job Booked!\nPickup: ${pickup}\nTerminal: ${terminal}\nService: RM${fare.toFixed(2)}\nPayment: ${payment}\nDate: ${new Date(date).toLocaleString()}\nNet Profit: RM${net.toFixed(2)}`;
+  
+  setTimeout(()=>{ alertBox.style.display='none'; }, 7000);
 }
 </script>
 
 </body>
 </html>
-
