@@ -3,52 +3,137 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Driver Helper</title>
+  <title>Driver Helper - Passenger</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      margin: 0;
+      max-width: 480px;
+      margin: 20px auto;
       padding: 20px;
-      background-color: #f9f9f9;
-    }
-    .container {
-      max-width: 600px;
-      margin: auto;
-      background: #fff;
-      padding: 20px;
+      border: 1px solid #ddd;
       border-radius: 10px;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
-    h1, h2 { text-align: center; }
+    h1, h2 {
+      text-align: center;
+    }
     label {
       display: block;
       margin: 10px 0 5px;
     }
-    select, input, button {
+    input, select {
       width: 100%;
-      padding: 10px;
+      padding: 8px;
       box-sizing: border-box;
       margin-bottom: 10px;
-      border-radius: 5px;
-      border: 1px solid #ccc;
     }
     button {
+      padding: 10px 15px;
+      width: 100%;
       background-color: #007bff;
       color: white;
       border: none;
+      border-radius: 5px;
       cursor: pointer;
       font-size: 16px;
     }
-    button:hover { background-color: #0056b3; }
-    p { font-weight: bold; margin: 10px 0; text-align: center; }
-    .job-alert, .reminder-alert {
+    button:hover {
+      background-color: #0056b3;
+    }
+    p, .alert {
+      margin: 10px 0;
+      font-weight: bold;
+      text-align: center;
+    }
+    .alert {
       background-color: #fffae6;
       border: 1px solid #ffd633;
       padding: 10px;
       border-radius: 5px;
-      text-align: center;
-      margin-top: 15px;
+      display: none;
     }
-    @keyframes blink {
-      0%
+  </style>
+</head>
+<body>
+
+  <h1>Driver Helper - Passenger</h1>
+
+  <!-- Service Type -->
+  <h2>Service Type</h2>
+  <label for="service">Choose Service:</label>
+  <select id="service">
+    <option value="60">Ekonomi - RM60</option>
+    <option value="75">6 Sitter - RM75</option>
+    <option value="80">Plus - RM80</option>
+    <option value="185">Exec - RM185</option>
+  </select>
+
+  <!-- Pick-up Location -->
+  <label for="pickup">Pick-up Location:</label>
+  <input type="text" id="pickup" placeholder="Enter pick-up location">
+
+  <!-- Payment Method -->
+  <label for="payment">Payment Method:</label>
+  <select id="payment">
+    <option value="Cash">Cash</option>
+    <option value="Online">Online</option>
+    <option value="eWallet">eWallet</option>
+  </select>
+
+  <button onclick="calculateFare()">Calculate Fare</button>
+
+  <p id="fare">Estimated Fare: RM0.00</p>
+  <p id="net">Net Profit (15% deduction): RM0.00</p>
+
+  <!-- KLIA Reminder -->
+  <h2>KLIA Reminder</h2>
+  <label for="reminderDate">Date & Time:</label>
+  <input type="datetime-local" id="reminderDate">
+  <button onclick="setReminder()">Set Reminder</button>
+  <div class="alert" id="reminderAlert">⏰ KLIA Reminder!</div>
+
+  <!-- Job Alert -->
+  <h2>Job Alert</h2>
+  <button onclick="simulateJob()">Check KLIA Jobs</button>
+  <div class="alert" id="jobAlert">🚨 New KLIA Job Available! <button onclick="acceptJob()">Accept Job</button></div>
+
+<script>
+function calculateFare() {
+  let base = parseFloat(document.getElementById('service').value);
+  
+  // Auto detect HF
+  let now = new Date();
+  let hour = now.getHours();
+  let isHF = (hour >= 5 && hour < 10) || (hour >= 17 && hour < 21);
+  
+  if(isHF) base *= 1.25; // +25% HF
+  let net = base * 0.85; // 15% deduction
+
+  document.getElementById('fare').innerText = 'Estimated Fare: RM' + base.toFixed(2);
+  document.getElementById('net').innerText = 'Net Profit (15% deduction): RM' + net.toFixed(2);
+}
+
+function setReminder() {
+  let date = document.getElementById('reminderDate').value;
+  if(date) {
+    let alertBox = document.getElementById('reminderAlert');
+    alertBox.style.display = 'block';
+    alertBox.innerText = '⏰ KLIA Reminder set for ' + new Date(date).toLocaleString();
+    setTimeout(()=>{ alertBox.style.display='none'; }, 5000);
+  }
+}
+
+function simulateJob() {
+  let alertBox = document.getElementById('jobAlert');
+  alertBox.style.display = 'block';
+  setTimeout(()=>{ alertBox.style.display='none'; }, 5000);
+}
+
+function acceptJob() {
+  alert('Job Accepted! Good luck 🚗');
+}
+</script>
+
+</body>
+</html>
 
